@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Organograma DICOM — atual e proposto (DICOM Next)</title>
+<style>
+  :root{
+    --navy:#14213f;
+    --navy2:#1c2f57;
+    --blue:#1a5fa8;
+    --blue-light:#e6f1fb;
+    --orange:#d8632a;
+    --orange-light:#fbeee5;
+    --gray-line:#c7ccd6;
+    --text:#1c2230;
+    --muted:#5b6472;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+    background:#f4f5f7;
+    color:var(--text);
+    margin:0;
+    padding:32px 16px 64px;
+  }
+  h1{ text-align:center; color:var(--navy); font-size:22px; margin:0 0 4px; }
+  h2.section-title{ text-align:center; color:var(--navy); font-size:20px; margin:56px 0 4px; }
+  .section-title mark{ background:#fff176; color:#1c2230; padding:2px 10px; border-radius:3px; box-decoration-break:clone; -webkit-box-decoration-break:clone; }
+  .subtitle{ text-align:center; color:var(--muted); font-size:13px; margin:0 0 10px; }
+  .chart{ max-width:1620px; margin:0 auto; overflow-x:auto; scroll-snap-type:x mandatory; padding-bottom:4px; scrollbar-width:none; -ms-overflow-style:none; }
+  .chart::-webkit-scrollbar{ display:none; }
+  .top-scrollbar{ max-width:1620px; margin:0 auto 14px; overflow-x:auto; overflow-y:hidden; height:14px; }
+  .top-scrollbar-inner{ height:1px; }
+  .center{ display:flex; justify-content:center; }
+  .node{ border-radius:8px; padding:9px 12px; font-size:12.5px; line-height:1.4; text-align:center; }
+  .node b{display:block;font-size:13.5px;font-weight:700;margin-bottom:3px;}
+  .node .who{color:var(--muted);font-size:12px;}
+  .top-node{
+    background:var(--navy); color:#fff; padding:12px 28px; border-radius:8px;
+    font-weight:600; font-size:16px; letter-spacing:.3px;
+  }
+  .connector{ width:2px; height:22px; background:var(--gray-line); margin:0 auto; }
+  .direct-note{ text-align:center; font-size:11px; color:var(--muted); margin:2px 0 6px; text-transform:uppercase; letter-spacing:.4px; }
+  .pillars-row{
+    display:flex; justify-content:flex-start; gap:16px; align-items:flex-start; position:relative;
+  }
+  .pillars-row::before{
+    content:""; position:absolute; top:0; left:125px; width:var(--line-width, 1862px); height:2px; background:var(--gray-line);
+  }
+  .pillar-drop{ width:2px; height:22px; background:var(--gray-line); margin:0 auto; }
+  .pillar.lower .pillar-drop{ height:92px; }
+  .pillar{ width:250px; flex:0 0 250px; display:flex; flex-direction:column; align-items:stretch; scroll-snap-align:start; }
+  .pillar.wide{ width:640px; flex:0 0 640px; }
+  .pillar-head{
+    background:var(--navy2); color:#fff; padding:11px 13px; border-radius:8px; font-weight:600;
+    font-size:14px; text-align:center;
+  }
+  .pillar.lower .pillar-head{ background:#3a4a72; }
+  .pillar-head.vaga-style{
+    background:var(--blue-light) !important; border:2px dashed var(--blue); color:#0c3a63 !important; position:relative; margin-top:0;
+  }
+  .pillar-head.vaga-style::before{
+    content:"VAGA NOVA"; position:absolute; top:-9px; left:10px; background:#fff176;
+    color:#0c3a63; font-size:9px; font-weight:700; letter-spacing:.3px; padding:1px 4px; border-radius:2px;
+  }
+  .pillar-head.vaga-style .who{ color:#3a6ea5 !important; }
+  .pillar-head .who{color:#c7d3ea;font-size:11px;font-weight:400;display:block;margin-top:2px;}
+  .pillar-head.split{ display:flex; justify-content:space-between; align-items:flex-start; text-align:left; gap:8px; font-size:13px; font-weight:600; padding:11px 13px; }
+  .pillar-head.split b{ font-weight:600; }
+  .pillar-head.split > div:first-child{ flex:1 1 auto; min-width:0; }
+  .pillar-head.split .who{ font-size:10.5px; font-weight:400; }
+  .pillar-head.split .countbox{ text-align:right; flex:0 0 auto; max-width:90px; }
+  .pillar-head.split .countbox .count{ background:#fff; color:var(--navy); font-weight:700; font-size:13px; border-radius:14px; padding:3px 9px; display:inline-block; }
+  .pillar-head.split .countbox .extra{ font-size:9.5px; color:#ffd9c2; margin-top:3px; line-height:1.35; }
+  .node.row-item{ display:flex; justify-content:space-between; align-items:flex-start; text-align:left; gap:8px; background:#f6f7f9; border:1px solid #d7dbe3; padding:8px 10px; font-size:12.5px; }
+  .node.row-item.flag-realoc{ border:2px dashed var(--orange); background:#fdf6f1; }
+  .node.row-item .n-name{ color:var(--text); flex:1 1 auto; min-width:0; }
+  .node.row-item .n-who{ color:var(--muted); font-size:11px; display:block; }
+  .node.row-item .n-vaga{ color:var(--orange); font-size:11px; display:block; }
+  .node.row-item .n-countbox{ text-align:right; flex:0 0 auto; max-width:80px; }
+  .node.row-item .n-count{ font-weight:700; color:var(--navy); white-space:nowrap; display:block; font-size:13px; }
+  .node.row-item .n-count-sub{ font-size:9.5px; color:var(--orange); display:block; margin-top:2px; }
+  .pillar-body{
+    border:1px dashed var(--gray-line); border-top:none; border-radius:0 0 8px 8px;
+    padding:12px 10px 10px; display:flex; flex-direction:column; gap:7px; background:#fff;
+  }
+  .existing{ background:#f1f3f6; border:1px solid #d7dbe3; color:var(--text); }
+  .existing-strong{ background:#eef1f5; border:1px solid #ccd2dc; }
+  .reloc{ background:var(--orange-light); border:2px dashed var(--orange); color:#7a3c17; position:relative; }
+  .reloc::before{
+    content:"REALOCAÇÃO INTERNA"; position:absolute; top:-9px; left:8px; background:var(--orange-light);
+    color:var(--orange); font-size:9px; font-weight:700; letter-spacing:.3px; padding:0 4px;
+  }
+  .reloc .who{ text-align:left; display:block; }
+  .reloc .who b.mini{ display:block; font-size:11.5px; font-weight:700; color:#7a3c17; margin-top:5px; }
+  .new{ background:var(--blue-light); border:2px dashed var(--blue); color:#0c3a63; position:relative; }
+  .new::before{
+    content:"VAGA NOVA"; position:absolute; top:-9px; left:8px; background:#fff176;
+    color:#0c3a63; font-size:9px; font-weight:700; letter-spacing:.3px; padding:1px 4px; border-radius:2px;
+  }
+  .opportunity{ background:#fff; border:2px dotted var(--blue); color:#0c3a63; }
+  .subgroup{
+    border-left:2px solid var(--gray-line); margin-left:5px; padding-left:9px;
+    display:flex; flex-direction:column; gap:7px;
+  }
+  .divider{ font-size:9.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.3px; margin-top:3px; }
+  .external-wrap{ display:flex; justify-content:center; margin-top:26px; }
+  .crono-wrap{ max-width:1300px; margin:0 auto; display:flex; justify-content:center; gap:18px; flex-wrap:wrap; }
+  .crono-month{ width:280px; border:1px solid #d7dbe3; border-radius:10px; background:#fff; overflow:hidden; flex-shrink:0; }
+  .crono-head{ background:var(--navy); color:#fff; padding:10px 14px; text-align:center; }
+  .crono-head b{ display:block; font-size:14px; font-weight:600; }
+  .crono-head span{ display:block; font-size:11px; color:#c7d3ea; margin-top:2px; }
+  .crono-body{ padding:10px 12px 12px; display:flex; flex-direction:column; gap:8px; }
+  .crono-item{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; font-size:12px; padding:6px 8px; background:#f6f7f9; border-radius:6px; }
+  .crono-item .ci-name{ color:var(--text); }
+  .crono-item .ci-val{ color:var(--navy); font-weight:700; white-space:nowrap; }
+  .crono-summary{ max-width:1300px; margin:26px auto 0; display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+  .crono-summary .summary-card{ background:var(--navy2); }
+  .pay-wrap{ max-width:1100px; margin:0 auto; display:flex; align-items:center; justify-content:center; gap:22px; flex-wrap:wrap; }
+  .pay-fee{ background:var(--navy); color:#fff; border-radius:12px; padding:18px 26px; min-width:320px; }
+  .pay-fee-label{ font-size:12px; color:#c7d3ea; font-weight:600; letter-spacing:.2px; }
+  .pay-fee-value{ font-size:26px; font-weight:700; margin-top:6px; }
+  .pay-arrow{ font-size:28px; color:var(--muted); }
+  .pay-split{ display:flex; flex-direction:column; gap:12px; }
+  .pay-item{ background:var(--blue-light); border-radius:10px; padding:12px 22px; min-width:260px; }
+  .pay-item-label{ font-size:12px; color:var(--muted); font-weight:600; }
+  .pay-item-value{ font-size:20px; font-weight:700; color:var(--navy); margin-top:4px; }
+  .pay-item.dicom .pay-item-label{ color:var(--blue); }
+  .pay-item.dicom .pay-item-value{ color:var(--blue); }
+  .external-box{
+    max-width:760px; border:2px dashed #8a8f99; border-radius:8px; padding:12px 18px;
+    background:#f4f4f4; font-size:12.5px; color:var(--text); text-align:center;
+  }
+  .external-box b{display:block;font-size:13px;margin-bottom:4px;color:var(--navy);}
+  .legend{
+    max-width:1300px; margin:34px auto 18px; display:flex; justify-content:center; gap:26px;
+    flex-wrap:wrap; font-size:12px;
+  }
+  .legend-item{display:flex;align-items:center;gap:7px;}
+  .swatch{width:16px;height:16px;border-radius:4px;flex-shrink:0;}
+  .sw-existing{background:#f1f3f6;border:1px solid #ccd2dc;}
+  .sw-reloc{background:var(--orange-light);border:2px dashed var(--orange);}
+  .sw-new{background:var(--blue-light);border:2px dashed var(--blue);}
+  .sw-ext{background:#f4f4f4;border:2px dashed #8a8f99;}
+  .sw-lower{background:#3a4a72;}
+  .sw-flag{background:#fdf6f1;border:2px dashed var(--orange);}
+  .top-counters{ display:flex; flex-direction:column; align-items:center; gap:6px; margin-bottom:14px; }
+  .top-counter{ font-weight:700; font-size:13px; padding:6px 16px; border-radius:20px; }
+  .counter-new{ background:var(--blue-light); border:2px dashed var(--blue); color:#0c3a63; }
+  .counter-reloc{ background:var(--orange-light); border:2px dashed var(--orange); color:#7a3c17; }
+  .summary{
+    max-width:1300px; margin:30px auto 0; border-top:1px solid #d7dbe3; padding-top:18px;
+    display:flex; gap:18px; justify-content:center; flex-wrap:wrap;
+  }
+  .summary-card{
+    background:var(--navy); color:#fff; border-radius:8px; padding:12px 18px; min-width:190px; text-align:center;
+  }
+  .summary-card .num{font-size:18px;font-weight:700;}
+  .summary-card .lbl{font-size:11px;color:#c7d3ea;margin-top:2px;}
+
+  /* Anexo — organograma atual */
+  .current-wrap{ max-width:1300px; margin:0 auto; }
+  .current-note{ text-align:center; font-size:12px; color:var(--muted); max-width:860px; margin:0 auto 22px; line-height:1.55; }
+  .super-grid{ display:flex; flex-wrap:wrap; gap:18px; justify-content:center; }
+  .super-card{
+    width:400px; border:1px solid #d7dbe3; border-radius:10px; background:#fff; overflow:hidden;
+  }
+  .super-head{
+    background:var(--navy); color:#fff; padding:10px 14px; display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
+  }
+  .super-head .name{ font-size:13.5px; font-weight:600; }
+  .super-head .who{ font-size:11px; color:#c7d3ea; }
+  .super-head .countbox{ text-align:right; flex-shrink:0; max-width:180px; }
+  .super-head .count{
+    background:#fff; color:var(--navy); font-weight:700; font-size:13px; border-radius:14px; padding:3px 10px; display:inline-block;
+  }
+  .super-head .extra{ font-size:9.5px; color:#ffd9c2; margin-top:3px; line-height:1.4; }
+  .ger-list{ padding:10px 14px 14px; display:flex; flex-direction:column; gap:6px; }
+  .ger-row{
+    display:flex; justify-content:space-between; gap:10px; font-size:12.5px; padding:6px 8px;
+    background:#f6f7f9; border-radius:6px; align-items:flex-start;
+  }
+  .ger-row .g-name{ color:var(--text); }
+  .ger-row .g-who{ color:var(--muted); font-size:11px; display:block; }
+  .ger-row .g-vaga-label{ color:var(--orange); font-size:11px; display:block; }
+  .ger-row .g-extra{ color:var(--orange); font-size:10.5px; display:block; margin-top:2px; }
+  .ger-row .g-countbox{ text-align:right; flex-shrink:0; max-width:150px; }
+  .ger-row .g-count{ font-weight:700; color:var(--navy); white-space:nowrap; display:block; }
+  .ger-row .g-count-sub{ font-size:9.5px; color:var(--orange); display:block; margin-top:2px; }
+  .current-summary{
+    max-width:1300px; margin:26px auto 0; display:flex; gap:14px; justify-content:center; flex-wrap:wrap;
+  }
+  .current-summary .summary-card{ background:var(--navy2); }
+  .current-summary .summary-card.vaga{ background:var(--blue-light); border:2px dashed var(--blue); color:#0c3a63; }
+  .current-summary .summary-card.vaga .num{ color:var(--blue); }
+  .current-summary .summary-card.vaga .lbl{ color:#3a6ea5; }
+
+  /* Mapa de capacidades — Superintendência de Performance */
+  .pillar-head.vaga-style .icon-title{ display:flex; align-items:center; justify-content:center; gap:7px; }
+  .pillar-head.vaga-style .icon-title svg{ width:15px; height:15px; flex-shrink:0; }
+  .cap-block{ border:1px solid #d7dbe3; border-radius:8px; overflow:hidden; background:#fff; }
+  .cap-head{ background:var(--navy2); color:#fff; padding:6px 10px; font-size:12px; font-weight:700; letter-spacing:.2px; }
+  .cap-items{ display:flex; flex-wrap:wrap; gap:6px; padding:9px; }
+  .cap-item{ background:#f6f7f9; border:1px solid #d7dbe3; border-radius:6px; padding:5px 9px; font-size:11px; color:var(--text); }
+  .funnel-mini{ display:flex; flex-direction:row; margin-top:6px; }
+  .funnel-step{
+    color:#fff; padding:8px 10px 8px 18px; font-size:10.5px; text-align:center; font-weight:600;
+    display:flex; align-items:center; justify-content:center; gap:5px; flex:1; position:relative; white-space:nowrap;
+  }
+  .funnel-step svg{ width:13px; height:13px; flex-shrink:0; }
+  .funnel-step:not(:first-child){ margin-left:-12px; }
+  .funnel-step:nth-child(1){ background:#8fa6c9; padding-left:12px; clip-path:polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%); }
+  .funnel-step:nth-child(2){ background:#6f8ab5; clip-path:polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%, 12px 50%); }
+  .funnel-step:nth-child(3){ background:#4f6fa0; clip-path:polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%, 12px 50%); }
+  .funnel-step:nth-child(4){ background:#33517f; clip-path:polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%, 12px 50%); }
+  .funnel-step:nth-child(5){ background:var(--navy); clip-path:polygon(0 0, 100% 0, 100% 100%, 0 100%, 12px 50%); }
+
+  /* ===== Calendário das Campanhas ===== */
+  :root{
+    --c-mestradao:#14213f;
+    --c-vestibular:#1a5fa8;
+    --c-embas:#2f9e8f;
+    --c-onemba:#7c5cbf;
+    --c-masters:#d8632a;
+    --c-law:#b23b56;
+    --c-idt:#3fa66b;
+  }
+  .cal-wrap{ max-width:1400px; margin:0 auto; }
+  .cal-card{
+    background:#fff; border-radius:14px; box-shadow:0 2px 14px rgba(20,33,63,.08);
+    padding:22px 22px 26px; margin:0 auto;
+  }
+  .cal-legend{
+    display:flex; flex-wrap:wrap; gap:18px; padding:12px 16px; background:#f7f8fa;
+    border-radius:10px; margin-bottom:22px; font-size:12.5px;
+  }
+  .cal-legend-item{ display:flex; align-items:center; gap:7px; }
+  .cal-dot{ width:12px; height:12px; border-radius:4px; flex-shrink:0; }
+  .gantt{ overflow-x:auto; }
+  .gantt-inner{ min-width:1500px; }
+  .months-header{ display:grid; grid-template-columns: 230px repeat(20, 1fr); margin-bottom:2px; }
+  .q-cell{
+    grid-row:1; text-align:center; font-size:10.5px; font-weight:700; color:var(--navy);
+    text-transform:uppercase; letter-spacing:.4px; padding:4px 0; border-bottom:2px solid var(--navy);
+    background:#eef1f6;
+  }
+  .m-cell{
+    text-align:center; font-size:10.5px; color:var(--muted); padding:5px 0;
+    border-bottom:1px solid var(--gray-line); background:#f9fafb;
+  }
+  .row-label-head{ grid-row:1 / span 2; }
+  .cal-rows{ display:grid; grid-template-columns:230px repeat(20, 1fr); }
+  .cal-row-label{
+    display:flex; align-items:center; font-size:12.5px; font-weight:600; color:var(--text);
+    padding:10px 10px 10px 4px; border-bottom:1px solid #eceff3; background:#fff;
+  }
+  .cal-track{
+    position:relative; border-bottom:1px solid #eceff3; min-height:44px;
+    grid-column: 2 / span 20; display:grid; grid-template-columns:repeat(20,1fr);
+  }
+  .cal-bar{
+    position:relative; align-self:center; height:26px; border-radius:13px;
+    display:flex; align-items:center; padding:0 10px; color:#fff; font-size:10.5px; font-weight:600;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; box-shadow:0 1px 3px rgba(0,0,0,.15);
+  }
+  .cal-bar .date-range{ font-weight:400; opacity:.85; margin-left:6px; }
+  .intake-tag{
+    font-size:9px; font-weight:700; color:var(--muted);
+    background:#fff; padding:0 4px; border-radius:3px; margin:0 0 3px 2px; align-self:flex-start;
+  }
+
+  /* ===== Mini-organograma — Gerência de Performance ===== */
+  .miniorg-wrap{ width:100%; margin:6px 0 0; text-align:left; }
+  .miniorg-top{ display:flex; justify-content:center; }
+  .miniorg-top-box{
+    background:var(--blue-light); border:2px dashed var(--blue); color:#0c3a63; position:relative;
+    padding:11px 20px; border-radius:8px; font-weight:700; font-size:14px; text-align:center;
+  }
+  .miniorg-top-box::before{
+    content:"VAGA NOVA"; position:absolute; top:-9px; left:50%; transform:translateX(-50%); background:#fff176;
+    color:#0c3a63; font-size:9px; font-weight:700; letter-spacing:.3px; padding:1px 4px; border-radius:2px; white-space:nowrap;
+  }
+  .miniorg-top-box .who{ display:block; font-weight:400; font-size:11px; color:#3a6ea5; margin-top:2px; }
+  .miniorg-connector{ width:2px; height:2px; background:var(--gray-line); margin:0 auto; }
+  .miniorg-row{ display:flex; justify-content:center; gap:30px; position:relative; padding-top:2px; }
+  .miniorg-row::before{ content:""; position:absolute; top:0; left:25%; right:25%; height:2px; background:var(--gray-line); }
+  .miniorg-col{ width:280px; position:relative; display:flex; flex-direction:column; align-items:stretch; }
+  .miniorg-drop{ width:2px; height:22px; background:var(--gray-line); margin:0 auto; }
+  .miniorg-head{
+    background:var(--blue-light); border:2px dashed var(--blue); color:#0c3a63; position:relative;
+    padding:9px 12px; border-radius:8px; font-weight:700; font-size:13px; text-align:center;
+  }
+  .miniorg-head::before{
+    content:"VAGA NOVA"; position:absolute; top:-9px; left:10px; background:#fff176;
+    color:#0c3a63; font-size:9px; font-weight:700; letter-spacing:.3px; padding:1px 4px; border-radius:2px;
+  }
+  .miniorg-head .icon-title{ display:flex; align-items:center; justify-content:center; gap:6px; }
+  .miniorg-head .icon-title svg{ width:15px; height:15px; flex-shrink:0; }
+  .miniorg-leaves{ margin-top:10px; display:flex; flex-direction:column; gap:8px; }
+  .miniorg-leaves .node.new{ margin-top:0; }
+  .miniorg-reloc-wrap{ margin-top:26px; }
+</style>
+</head>
+<body>
+
+<svg style="display:none" aria-hidden="true">
+  <defs>
+    <symbol id="ic-megaphone" viewBox="0 0 24 24"><path d="M3 10v4a1 1 0 0 0 1 1h2l1 5h2l-1-5h1l9 4V6L9 10H4a1 1 0 0 0-1 1z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M19 9v6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="ic-trend" viewBox="0 0 24 24"><path d="M3 17l5-5 4 3 7-8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 7h5v5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-people" viewBox="0 0 24 24"><circle cx="8" cy="8" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="16" cy="9" r="2.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3 19c0-2.8 2.2-5 5-5s5 2.2 5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M14.5 14.3c2.3.3 4 2.2 4 4.7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="ic-person" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M5 20c0-3.6 3.1-6.4 7-6.4s7 2.8 7 6.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="ic-ads" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9 10.5l6 2.5-6 2.5z" fill="currentColor"/></symbol>
+    <symbol id="ic-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M18.5 18.5l-3.6-3.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="ic-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.5 7-11.5A7 7 0 0 0 5 9.5C5 14.5 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="9.5" r="2.2" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+    <symbol id="ic-funnel" viewBox="0 0 24 24"><path d="M3 4h18l-7 8v6l-4 2v-8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5.5 9a1.8 1.8 0 0 0 1.6 2.7h11.8a1.8 1.8 0 0 0 1.6-2.7L14 9V3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><path d="M7.5 15h9" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+    <symbol id="ic-browser" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3 8.5h18" stroke="currentColor" stroke-width="1.6"/><circle cx="6" cy="6.5" r="0.6" fill="currentColor"/></symbol>
+    <symbol id="ic-bar" viewBox="0 0 24 24"><path d="M5 19V11M12 19V5M19 19v-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="ic-share" viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="17" cy="6" r="2.4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="17" cy="18" r="2.4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8.1 10.8l6.8-3.6M8.1 13.2l6.8 3.6" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+    <symbol id="ic-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 3v2.2M12 18.8V21M21 12h-2.2M5.2 12H3M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6M18.4 18.4l-1.6-1.6M7.2 7.2 5.6 5.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="ic-envelope" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 7l8 6 8-6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-chat" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 1 3.3 6.4L4 20l1.2-3.6A7.9 7.9 0 0 1 4 12z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-path" viewBox="0 0 24 24"><circle cx="5" cy="6" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="19" cy="18" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M7 6h6a4 4 0 0 1 4 4v2a4 4 0 0 0 4 4h-2" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+    <symbol id="ic-heart" viewBox="0 0 24 24"><path d="M12 20s-7.2-4.4-9.4-9.1C1.3 7.8 3 4.8 6.2 4.4c1.9-.2 3.6.8 4.8 2.4 1.2-1.6 2.9-2.6 4.8-2.4 3.2.4 4.9 3.4 3.6 6.5C19.2 15.6 12 20 12 20z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-arrowup" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="0.9" fill="currentColor"/></symbol>
+    <symbol id="ic-cursor" viewBox="0 0 24 24"><path d="M5 3l14 6-5.6 1.9L11 17z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-cap" viewBox="0 0 24 24"><path d="M12 5 2 9.5 12 14l10-4.5L12 5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M6 11.7V16c0 1.4 2.7 2.6 6 2.6s6-1.2 6-2.6v-4.3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M21 10v5.3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="ic-refresh" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 8M20 4v4h-4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 12a8 8 0 0 1-13.7 5.6L4 16M4 20v-4h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </defs>
+</svg>
+
+<!-- ================= ANEXO: ORGANOGRAMA ATUAL ================= -->
+
+<h1>DICOM organograma atual (o que já existe hoje) + DICOM Next</h1>
+<p class="subtitle" id="scrollHintText">As novas solicitações e os remanejamentos não estão considerados no total de cada superintendência e gerência.</p>
+
+<div class="top-counters">
+  <div class="top-counter counter-new">20 novas contratações</div>
+  <div class="top-counter counter-reloc">15 realocações</div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><span class="swatch sw-existing"></span>Estrutura já existente</div>
+  <div class="legend-item"><span class="swatch sw-new"></span>Vaga nova</div>
+  <div class="legend-item"><span class="swatch sw-reloc"></span>Realocação interna (recebe pessoas)</div>
+  <div class="legend-item"><span class="swatch sw-flag"></span>Área de origem da realocação (envia pessoas)</div>
+</div>
+
+<div class="top-scrollbar" id="topScrollbar"><div class="top-scrollbar-inner" style="width:2112px"></div></div>
+
+<div class="chart" id="chartAtual">
+
+  <div class="center"><div class="top-node">DIRETOR DICOM — Marcos Facó</div></div>
+  <div class="connector"></div>
+
+  <div class="pillars-row" style="--line-width:1862px">
+
+    <div class="pillar">
+      <div class="pillar-drop"></div>
+      <div class="pillar-head split">
+        <div><b>Superintendência de Marketing Escolas e Unidades</b><span class="who">Alexandre Pereira (incluindo o superintendente na contagem)</span></div>
+        <div class="countbox"><span class="count">17</span><div class="extra">+1 estagiário</div></div>
+      </div>
+      <div class="pillar-body">
+        <div class="node row-item"><span class="n-name">Gerência de Marketing EAESP<span class="n-vaga">gerência vaga</span></span><span class="n-countbox"><span class="n-count">1</span></span></div>
+        <div class="node row-item"><span class="n-name">Gerência de Marketing Escolas e Unidades SP<span class="n-who">Ricardo Belussi</span></span><span class="n-countbox"><span class="n-count">6</span><span class="n-count-sub">+1 estagiário</span></span></div>
+        <div class="node row-item"><span class="n-name">Gerência de Marketing Escolas e Unidades RJ<span class="n-vaga">gerência vaga</span></span><span class="n-countbox"><span class="n-count">9</span></span></div>
+      </div>
+    </div>
+
+    <div class="pillar">
+      <div class="pillar-drop"></div>
+      <div class="pillar-head split">
+        <div><b>Superintendência de Marketing – IDE</b><span class="who">Rafael Fernandes (incluindo o superintendente na contagem)</span></div>
+        <div class="countbox"><span class="count">10</span><div class="extra">+1 vaga de estágio em contratação</div></div>
+      </div>
+      <div class="pillar-body">
+        <div class="node row-item"><span class="n-name">Gerência de Marketing IDE BSB<span class="n-who">Gabriela Lemos</span></span><span class="n-countbox"><span class="n-count">2</span></span></div>
+        <div class="node row-item"><span class="n-name">Gerência de Marketing IDE SP<span class="n-who">Gabriela Meirinho</span></span><span class="n-countbox"><span class="n-count">3</span></span></div>
+        <div class="node row-item"><span class="n-name">Gerência de Marketing IDE RJ<span class="n-who">Daniela Vaslin</span></span><span class="n-countbox"><span class="n-count">2</span><span class="n-count-sub">+1 vaga de estágio em contratação</span></span></div>
+        <div class="node row-item"><span class="n-name">Gerência de Marketing IDE BR<span class="n-who">André Pereira</span></span><span class="n-countbox"><span class="n-count">2</span></span></div>
+      </div>
+    </div>
+
+    <div class="pillar">
+      <div class="pillar-drop"></div>
+      <div class="pillar-head split">
+        <div><b>Superintendência de Comunicação e Digital</b><span class="who">Bruno Arouca (incluindo o superintendente na contagem)</span></div>
+        <div class="countbox"><span class="count">38</span><div class="extra">+3 estagiários</div><div class="extra">+1 jovem aprendiz</div></div>
+      </div>
+      <div class="pillar-body">
+        <div class="node row-item flag-realoc"><span class="n-name">Gerência de Social Growth<span class="n-who">Eduardo Rodrigues</span></span><span class="n-countbox"><span class="n-count" style="color:red;">6</span><span class="n-count-sub">+1 estagiário</span><span class="n-count-sub" style="color:red;font-weight:700;background:#fff176;padding:1px 4px;border-radius:3px;">*realocar 02</span></span></div>
+        <div class="node row-item flag-realoc"><span class="n-name">Gerência de Digital Experience<span class="n-who">Fernando Terra</span></span><span class="n-countbox"><span class="n-count" style="color:red;">6</span><span class="n-count-sub">+1 estagiário</span><span class="n-count-sub" style="color:red;font-weight:700;background:#fff176;padding:1px 4px;border-radius:3px;">*realocar 05</span></span></div>
+        <div class="node row-item"><span class="n-name">Gerência de Criação<span class="n-who">Angelo Soares</span></span><span class="n-countbox"><span class="n-count">5</span></span></div>
+        <div class="node new"><b>3 vagas de Designer Sr.</b></div>
+        <div class="node new"><b>1 vaga de Redator Sr.</b></div>
+        <div class="node row-item"><span class="n-name">Gerência de Eventos<span class="n-who">Caren Lopes</span></span><span class="n-countbox"><span class="n-count">6 RJ</span><span class="n-count">4 SP</span><span class="n-count-sub">+1 jovem aprendiz</span></span></div>
+        <div class="node row-item"><span class="n-name">Gerência de Comunicação Corporativa<span class="n-who">Eduardo Bittencourt</span></span><span class="n-countbox"><span class="n-count">6</span><span class="n-count-sub">+1 estagiário</span></span></div>
+        <div class="node row-item"><span class="n-name">Controle e Tráfego<span class="n-who">Alexandre Breves</span></span><span class="n-countbox"><span class="n-count">2</span></span></div>
+      </div>
+    </div>
+
+    <div class="pillar">
+      <div class="pillar-drop"></div>
+      <div class="pillar-head split">
+        <div><b>Superintendência de Planejamento e Gestão</b><span class="who">Carolina Ramos (incluindo o superintendente na contagem)</span></div>
+        <div class="countbox"><span class="count">7</span><div class="extra">+2 estagiários</div><div class="extra">+1 vaga de estágio em contratação</div></div>
+      </div>
+      <div class="pillar-body">
+        <div class="node row-item"><span class="n-name">Controladoria</span><span class="n-countbox"><span class="n-count">3</span></span></div>
+        <div class="node row-item"><span class="n-name">Processos<span class="n-who">Tathiana Queres</span></span><span class="n-countbox"><span class="n-count">2</span><span class="n-count-sub">+1 estagiário</span></span></div>
+        <div class="node row-item"><span class="n-name">Gestão Corporativa<span class="n-who">Cecilia Rodrigues</span></span><span class="n-countbox"><span class="n-count">1</span><span class="n-count-sub">+1 estagiário</span><span class="n-count-sub">+1 vaga de estágio em contratação</span></span></div>
+        <div class="node new"><b>2 vagas novas</b><span class="who">01 Sênior e 01 Júnior</span></div>
+      </div>
+    </div>
+
+    <div class="pillar">
+      <div class="pillar-drop"></div>
+      <div class="pillar-head split">
+        <div><b>Superintendência de Inteligência e Relacionamento</b><span class="who">Luis Eduardo Guedes (incluindo o superintendente na contagem)</span></div>
+        <div class="countbox"><span class="count">21</span><div class="extra">+1 estagiário</div></div>
+      </div>
+      <div class="pillar-body">
+        <div class="node row-item flag-realoc"><span class="n-name">Gerência de Inteligência de Mercado<span class="n-who">Gabriella Pinheiro</span></span><span class="n-countbox"><span class="n-count" style="color:red;">10</span><span class="n-count-sub">+1 estagiário</span><span class="n-count-sub" style="color:red;font-weight:700;background:#fff176;padding:1px 4px;border-radius:3px;">*realocar 01</span></span></div>
+        <div class="node row-item flag-realoc"><span class="n-name" style="text-decoration:line-through;">Gerência de CRM<span class="n-who" style="text-decoration:line-through;">Jéssica Cardoso</span></span><span class="n-countbox"><span class="n-count" style="color:red;">10</span><span class="n-count-sub" style="color:red;font-weight:700;background:#fff176;padding:1px 4px;border-radius:3px;">*realocar 07</span></span></div>
+      </div>
+    </div>
+
+    <div class="pillar wide">
+      <div class="pillar-drop"></div>
+      <div class="pillar-head vaga-style" style="margin-top:0;"><span class="icon-title"><svg><use href="#ic-person"/></svg>Superintendente de Performance</span><span class="who">Full funnel · nova superintendência</span></div>
+      <div class="pillar-body">
+        <div class="cap-block">
+          <div class="cap-head">Mídia Performance</div>
+          <div class="cap-items">
+            <span class="cap-item">Google Ads</span>
+            <span class="cap-item">Meta Ads</span>
+            <span class="cap-item">TikTok Ads</span>
+            <span class="cap-item">LinkedIn Ads</span>
+          </div>
+        </div>
+        <div class="cap-block">
+          <div class="cap-head">Growth & CRO</div>
+          <div class="cap-items">
+            <span class="cap-item">SEO</span>
+            <span class="cap-item">GEO / AI Search</span>
+            <span class="cap-item">UX</span>
+            <span class="cap-item">CRO</span>
+            <span class="cap-item">Testes A/B</span>
+            <span class="cap-item">Landing Pages</span>
+            <span class="cap-item">Analytics</span>
+          </div>
+        </div>
+        <div class="cap-block">
+          <div class="cap-head">CRM & Lifecycle</div>
+          <div class="cap-items">
+            <span class="cap-item">Segmentação</span>
+            <span class="cap-item">Automação</span>
+            <span class="cap-item">E-mail Marketing</span>
+            <span class="cap-item">WhatsApp</span>
+            <span class="cap-item">Jornadas</span>
+            <span class="cap-item">Retenção</span>
+            <span class="cap-item">LTV</span>
+          </div>
+        </div>
+        <div class="funnel-mini">
+          <div class="funnel-step"><svg><use href="#ic-target"/></svg>Atrair</div>
+          <div class="funnel-step"><svg><use href="#ic-cursor"/></svg>Converter</div>
+          <div class="funnel-step"><svg><use href="#ic-people"/></svg>Relacionar</div>
+          <div class="funnel-step"><svg><use href="#ic-refresh"/></svg>Reter</div>
+          <div class="funnel-step"><svg><use href="#ic-trend"/></svg>Receita</div>
+        </div>
+
+        <div class="miniorg-wrap">
+          <div class="miniorg-top">
+            <div class="miniorg-top-box">Gerente de Performance<span class="who">Vaga nova</span></div>
+          </div>
+          <div class="miniorg-connector"></div>
+
+          <div class="miniorg-row">
+
+            <div class="miniorg-col">
+              <div class="miniorg-drop"></div>
+              <div class="miniorg-head"><span class="icon-title"><svg><use href="#ic-target"/></svg>Especialista IDE</span></div>
+              <div class="miniorg-leaves">
+                <div class="node new"><b>Analista Sênior</b></div>
+                <div class="node new"><b>Analista Sênior</b></div>
+                <div class="node new"><b>Analista Pleno</b></div>
+                <div class="node new"><b>Analista de CRM Sênior</b></div>
+              </div>
+            </div>
+
+            <div class="miniorg-col">
+              <div class="miniorg-drop"></div>
+              <div class="miniorg-head"><span class="icon-title"><svg><use href="#ic-cap"/></svg>Especialista Escolas</span></div>
+              <div class="miniorg-leaves">
+                <div class="node new"><b>Analista Sênior</b></div>
+                <div class="node new"><b>Analista Sênior</b></div>
+                <div class="node new"><b>Analista de CRM Júnior</b></div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="miniorg-reloc-wrap">
+            <div class="node reloc" style="max-width:520px;margin:0 auto;">
+              <b>Realocações internas (15 pessoas)</b>
+              <span class="who">
+                <b class="mini">De Digital Experience (5)</b>
+                Fernando Terra, Vinícius Matsumoto, Beatriz Neves, Felipe Alves e Milla Lobo
+                <b class="mini">De Inteligência de Mercado (1)</b>
+                Yan Aguiar
+                <b class="mini">De Social Growth (2)</b>
+                Natália Ogino e Beatriz Machado, com a mídia paga
+                <b class="mini">De CRM (7)</b>
+                Jessica Cardoso, Rômulo Medina, Luca Saroldi, Matheus Quintan, Monica Tupinambá por squad, cuidando das réguas e Sarah Picanço e Ana Caroline Siqueira, cuidando de Chatbot e Call Center
+              </span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="pillar">
+      <div class="pillar-drop"></div>
+      <div class="pillar-head split">
+        <div><b>Gerência de Inovação e Inteligência Artificial</b><span class="who">Felippe Eiji</span></div>
+        <div class="countbox"><span class="count">8</span><div class="extra">+2 vagas de analista em contratação</div></div>
+      </div>
+      <div class="pillar-body">
+        <div class="node row-item"><span class="n-name">Time de Inovação e IA</span><span class="n-countbox"><span class="n-count">8</span></span></div>
+        <div class="node new"><b>2 contratações</b><span class="who">Coordenador de Automação e Desenvolvimento de Software para IA e Desenvolvedor de Software Backend e Frontend</span></div>
+      </div>
+    </div>
+
+    <div class="pillar">
+      <div class="pillar-drop"></div>
+      <div class="pillar-head split">
+        <div><b>Gerência de Arquitetura da Informação e Governança de Dados</b><span class="who">Viviane Costa</span></div>
+        <div class="countbox"><span class="count">1</span></div>
+      </div>
+      <div class="pillar-body">
+        <div class="node row-item"><span class="n-name">Arquitetura e Governança de Dados</span><span class="n-countbox"><span class="n-count">1</span></span></div>
+        <div class="node new"><b>1 contratação</b><span class="who">Coordenador de Engenharia de Dados, Infraestrutura e Integrações Sênior</span></div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<h2 class="section-title"><mark>CALENDÁRIO DAS CAMPANHAS</mark></h2>
+<p class="subtitle">Escolas RJ, SP e BSB · janela de vigência de cada campanha (2027–2028)</p>
+
+<div class="cal-wrap">
+  <div class="cal-card">
+
+    <div class="cal-legend">
+      <div class="cal-legend-item"><span class="cal-dot" style="background:var(--c-mestradao)"></span>Mestradão</div>
+      <div class="cal-legend-item"><span class="cal-dot" style="background:var(--c-vestibular)"></span>Vestibular</div>
+      <div class="cal-legend-item"><span class="cal-dot" style="background:var(--c-embas)"></span>EMBAS EAESP</div>
+      <div class="cal-legend-item"><span class="cal-dot" style="background:var(--c-onemba)"></span>OneMBA EAESP</div>
+      <div class="cal-legend-item"><span class="cal-dot" style="background:var(--c-masters)"></span>Masters EESP</div>
+      <div class="cal-legend-item"><span class="cal-dot" style="background:var(--c-law)"></span>FGV Law</div>
+      <div class="cal-legend-item"><span class="cal-dot" style="background:var(--c-idt)"></span>IDT</div>
+    </div>
+
+    <div class="gantt">
+      <div class="gantt-inner">
+
+        <div class="months-header">
+          <div class="q-cell row-label-head" style="text-align:left;padding-left:4px;background:#fff;border-bottom:2px solid var(--navy);color:var(--muted);font-size:11px;display:flex;align-items:center;">Programas</div>
+          <div class="q-cell" style="grid-column:span 3;">1º Trim 2027</div>
+          <div class="q-cell" style="grid-column:span 3;">2º Trim 2027</div>
+          <div class="q-cell" style="grid-column:span 3;">3º Trim 2027</div>
+          <div class="q-cell" style="grid-column:span 3;">4º Trim 2027</div>
+          <div class="q-cell" style="grid-column:span 3;">1º Trim 2028</div>
+          <div class="q-cell" style="grid-column:span 3;">2º Trim 2028</div>
+          <div class="q-cell" style="grid-column:span 2;">3º Trim 2028</div>
+
+          <div class="m-cell">Jan</div><div class="m-cell">Fev</div><div class="m-cell">Mar</div>
+          <div class="m-cell">Abr</div><div class="m-cell">Mai</div><div class="m-cell">Jun</div>
+          <div class="m-cell">Jul</div><div class="m-cell">Ago</div><div class="m-cell">Set</div>
+          <div class="m-cell">Out</div><div class="m-cell">Nov</div><div class="m-cell">Dez</div>
+          <div class="m-cell">Jan</div><div class="m-cell">Fev</div><div class="m-cell">Mar</div>
+          <div class="m-cell">Abr</div><div class="m-cell">Mai</div><div class="m-cell">Jun</div>
+          <div class="m-cell">Jul</div><div class="m-cell">Ago</div>
+        </div>
+
+        <div class="cal-rows">
+
+          <div class="cal-row-label">Mestradão</div>
+          <div class="cal-track">
+            <div style="grid-column:1/13;display:flex;align-items:center;">
+              <div class="cal-bar" style="background:var(--c-mestradao);width:100%;">Mestradão<span class="date-range">01/01/2027 – 31/12/2027</span></div>
+            </div>
+          </div>
+
+          <div class="cal-row-label">Vestibular</div>
+          <div class="cal-track">
+            <div style="grid-column:1/13;display:flex;align-items:center;">
+              <div class="cal-bar" style="background:var(--c-vestibular);width:100%;">Vestibular<span class="date-range">01/01/2027 – 31/12/2027</span></div>
+            </div>
+          </div>
+
+          <div class="cal-row-label">EMBAS EAESP</div>
+          <div class="cal-track">
+            <div style="grid-column:2/7;display:flex;flex-direction:column;justify-content:center;">
+              <span class="intake-tag">intake 2027.2</span>
+              <div class="cal-bar" style="background:var(--c-embas);width:100%;">15/02/2027 – 16/06/2027</div>
+            </div>
+            <div style="grid-column:6/15;display:flex;flex-direction:column;justify-content:center;">
+              <span class="intake-tag">intake 2028.1</span>
+              <div class="cal-bar" style="background:var(--c-embas);opacity:.75;width:100%;">17/06/2027 – 15/02/2028</div>
+            </div>
+          </div>
+
+          <div class="cal-row-label">OneMBA EAESP</div>
+          <div class="cal-track">
+            <div style="grid-column:1/9;display:flex;align-items:center;">
+              <div class="cal-bar" style="background:var(--c-onemba);width:100%;">OneMBA EAESP<span class="date-range">01/01/2027 – 08/08/2027</span></div>
+            </div>
+          </div>
+
+          <div class="cal-row-label">Masters EESP</div>
+          <div class="cal-track">
+            <div style="grid-column:1/6;display:flex;flex-direction:column;justify-content:center;">
+              <span class="intake-tag">intake 2027.2</span>
+              <div class="cal-bar" style="background:var(--c-masters);width:100%;">09/01/2027 – 17/05/2027</div>
+            </div>
+            <div style="grid-column:8/14;display:flex;flex-direction:column;justify-content:center;">
+              <span class="intake-tag">intake 2028.1</span>
+              <div class="cal-bar" style="background:var(--c-masters);opacity:.75;width:100%;">18/08/2027 – 08/01/2028</div>
+            </div>
+          </div>
+
+          <div class="cal-row-label">FGV Law</div>
+          <div class="cal-track">
+            <div style="grid-column:9/16;display:flex;align-items:center;">
+              <div class="cal-bar" style="background:var(--c-law);width:100%;">FGV Law<span class="date-range">02/09/2027 – 03/03/2028</span></div>
+            </div>
+          </div>
+
+          <div class="cal-row-label">IDT</div>
+          <div class="cal-track">
+            <div style="grid-column:8/21;display:flex;align-items:center;">
+              <div class="cal-bar" style="background:var(--c-idt);width:100%;">IDT<span class="date-range">18/08/2027 – 18/08/2028</span></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function(){
+    var chart = document.getElementById('chartAtual');
+    var top = document.getElementById('topScrollbar');
+    if(!chart || !top) return;
+    var inner = top.querySelector('.top-scrollbar-inner');
+
+    function syncWidth(){
+      var row = chart.querySelector('.pillars-row');
+      var w = row ? row.scrollWidth : chart.scrollWidth;
+      if(inner) inner.style.width = w + 'px';
+      if(row) row.style.setProperty('--line-width', Math.max(0, w - 125) + 'px');
+    }
+    syncWidth();
+    window.addEventListener('resize', syncWidth);
+    window.addEventListener('load', syncWidth);
+
+    var syncing = false;
+    chart.addEventListener('scroll', function(){
+      if(syncing) return;
+      syncing = true;
+      top.scrollLeft = chart.scrollLeft;
+      syncing = false;
+    });
+    top.addEventListener('scroll', function(){
+      if(syncing) return;
+      syncing = true;
+      chart.scrollLeft = top.scrollLeft;
+      syncing = false;
+    });
+  })();
+</script>
+</body>
+</html>
